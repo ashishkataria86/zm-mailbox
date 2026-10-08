@@ -1708,7 +1708,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <deprecateDesc>Formally deprecated in 8.6 but has been unused since at least 7.0. MTA now uses all servers which have zimbraMtaAuthTarget set to TRUE</deprecateDesc>
 </attr>
 
-<attr id="311" name="zimbraMtaMyNetworks" type="astring" max="10240" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta">
+<attr id="311" name="zimbraMtaMyNetworks" type="astring" max="10240" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" callback="MtaMyNetworks">
   <desc>value of postfix mynetworks</desc>
 </attr>
 
