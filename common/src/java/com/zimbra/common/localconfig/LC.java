@@ -411,6 +411,14 @@ public final class LC {
     @Supported
     public static final KnownKey ldap_starttls_required = KnownKey.newKey(true);
 
+    /**
+     * Comma-separated list of TLS protocols enabled for LDAP SSL/STARTTLS connections.
+     * Defaults to TLSv1.2,TLSv1.3 to support both legacy (TLS 1.2-only) and modern LDAP servers.
+     * Set to a single value (e.g. TLSv1.2) to restrict to a specific protocol version.
+     */
+    @Supported
+    public static final KnownKey ldap_ssl_protocols = KnownKey.newKey("TLSv1.2,TLSv1.3");
+
     @Reloadable
     public static final KnownKey clamav_socket_timeout = KnownKey.newKey(2000);
     @Reloadable
