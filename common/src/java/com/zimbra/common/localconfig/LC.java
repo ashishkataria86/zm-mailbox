@@ -419,6 +419,18 @@ public final class LC {
     @Supported
     public static final KnownKey ldap_ssl_protocols = KnownKey.newKey("TLSv1.2,TLSv1.3");
 
+    /**
+     * When true, re-enables TLS_RSA_* (RSA key-exchange) cipher suites for outbound LDAP SSL/STARTTLS
+     * connections by removing the "TLS_RSA_" prefix entry from jdk.tls.disabledAlgorithms at startup.
+     * Java 17.0.18 (shipped with Zimbra 10.1.21) disabled all TLS_RSA_* cipher suites by default.
+     * See: https://www.oracle.com/java/technologies/javase/17-0-18-relnotes.html
+     * LDAP/AD servers that only offer TLS_RSA_* suites will fail to authenticate unless this is true.
+     * Domains using local Zimbra LDAP are not affected; only external LDAP/AD servers are impacted.
+     * Set to false once the external LDAP server has been upgraded to offer ECDHE cipher suites.
+     */
+    @Supported
+    public static final KnownKey ldap_ssl_allow_legacy_rsa_ciphers = KnownKey.newKey(true);
+
     @Reloadable
     public static final KnownKey clamav_socket_timeout = KnownKey.newKey(2000);
     @Reloadable

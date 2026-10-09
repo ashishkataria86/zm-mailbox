@@ -17,6 +17,9 @@
 package com.zimbra.cs.ldap.unboundid;
 
 import java.security.GeneralSecurityException;
+import java.security.Security;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -30,15 +33,26 @@ import com.zimbra.cs.ldap.LdapException;
 
 public class LdapSSLUtil {
 
+    // Java 17.0.18 added "TLS_RSA_" to jdk.tls.disabledAlgorithms as a single prefix entry,
+    // disabling all TLS_RSA_* (RSA key-exchange, no forward secrecy) cipher suites.
+    // See: https://www.oracle.com/java/technologies/javase/17-0-18-relnotes.html
+    private static final String TLS_RSA_DISABLED_ENTRY = "TLS_RSA_";
+
     static {
-        // Apply ldap_ssl_protocols config to the JVM client TLS protocol list at class load time.
-        // This overrides the mailboxd_java_options value of jdk.tls.client.protocols specifically
-        // for LDAP SSL contexts. Defaults to "TLSv1.2,TLSv1.3" to support both legacy and modern
-        // LDAP servers. Setting it to "TLSv1.2" alone allows connection to servers that only
-        // support TLS 1.2 without requiring a full JVM restart with modified java options.
-        String ldapProtocols = LC.ldap_ssl_protocols.value();
-        if (ldapProtocols != null && !ldapProtocols.isEmpty()) {
-            System.setProperty("jdk.tls.client.protocols", ldapProtocols.trim());
+        if (LC.ldap_ssl_allow_legacy_rsa_ciphers.booleanValue()) {
+            // Re-enable TLS_RSA_* cipher suites by removing the "TLS_RSA_" prefix entry that
+            // Java 17.0.18 added to jdk.tls.disabledAlgorithms. External LDAP/AD servers that
+            // only offer RSA key-exchange cipher suites fail the TLS handshake without this.
+            // Per Oracle's release notes, users may re-enable these at their own risk by
+            // removing "TLS_RSA_" from jdk.tls.disabledAlgorithms — this does that programmatically.
+            String disabled = Security.getProperty("jdk.tls.disabledAlgorithms");
+            if (disabled != null && disabled.contains(TLS_RSA_DISABLED_ENTRY)) {
+                String updated = Arrays.stream(disabled.split(","))
+                    .map(String::trim)
+                    .filter(entry -> !entry.equalsIgnoreCase(TLS_RSA_DISABLED_ENTRY))
+                    .collect(Collectors.joining(", "));
+                Security.setProperty("jdk.tls.disabledAlgorithms", updated);
+            }
         }
     }
 
